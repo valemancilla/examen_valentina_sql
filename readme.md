@@ -1,7 +1,8 @@
 
 # 🍕 Sistema de Gestión de Pizzería – Base de Datos MySQL
 
-## 📋 Descripción del Proyecto
+## 📋 Descripción del Proyecto 
+
 
 Proyecto académico enfocado en el diseño e implementación de una base de datos relacional para una pizzería utilizando MySQL. La solución centraliza la información de productos, ingredientes, combos, pedidos, clientes y adiciones, incorporando vistas y disparadores que facilitan la operación diaria y el análisis de datos.
 
