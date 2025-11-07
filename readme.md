@@ -9,7 +9,7 @@ El propósito principal es facilitar el control del menú, la gestión de ventas
 
 ---
 
-## 🎯 Objetivo
+## 🎯 Objetivo 
 
 Desarrollar una base de datos que permita:
 
@@ -22,6 +22,7 @@ Desarrollar una base de datos que permita:
 ---
 
 ## 🌟 Características Destacadas
+
 
 * **Gestión de Productos:** Control completo de productos elaborados y no elaborados, incluyendo sus ingredientes.
 * **Gestión de Adiciones:** Posibilidad de agregar extras a los productos (como queso, salsas, etc.).
@@ -40,7 +41,9 @@ Desarrollar una base de datos que permita:
 
 ---
 
-## 🗂️ Estructura del Sistema
+
+## 🗂️ Estructura del Sistema 
+
 
 El sistema está compuesto por las siguientes entidades principales:
 
@@ -54,6 +57,7 @@ El sistema está compuesto por las siguientes entidades principales:
 
 ---
 
+
 ## 📦 Qué Hace Cada Archivo
 
 | Archivo            | Descripción                                                                                                           |
@@ -63,6 +67,7 @@ El sistema está compuesto por las siguientes entidades principales:
 | **README.md**      | Documento de guía del proyecto: explica la finalidad, características, estructura, archivos y tecnologías utilizadas. |
 
 ---
+
 
 ## 👨‍💻 Autor
 
