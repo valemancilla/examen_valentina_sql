@@ -1,0 +1,536 @@
+-- ============================================================================
+-- BASE DE DATOS PIZZERÍA - TERCERA FORMA NORMAL (3FN)
+-- Sistema de Gestión de Productos, Combos, Pedidos y Clientes
+-- ============================================================================
+
+-- Eliminar base de datos si existe y crear nueva
+DROP DATABASE IF EXISTS pizzeria_db;
+CREATE DATABASE pizzeria_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE pizzeria_db;
+
+-- ============================================================================
+-- TABLA: CLIENTE
+-- Almacena información de los clientes de la pizzería
+-- ============================================================================
+CREATE TABLE cliente (
+    id_cliente INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    apellido VARCHAR(100) NOT NULL,
+    telefono VARCHAR(20),
+    email VARCHAR(150) UNIQUE,
+    direccion VARCHAR(255),
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    activo BOOLEAN DEFAULT TRUE,
+    INDEX idx_telefono (telefono),
+    INDEX idx_email (email)
+) ENGINE=InnoDB;
+
+-- ============================================================================
+-- TABLA: INGREDIENTE
+-- Catálogo de ingredientes disponibles para productos elaborados
+-- ============================================================================
+CREATE TABLE ingrediente (
+    id_ingrediente INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL UNIQUE,
+    tipo ENUM('base', 'proteina', 'vegetal', 'queso', 'salsa', 'otro') NOT NULL,
+    descripcion TEXT,
+    disponible BOOLEAN DEFAULT TRUE,
+    costo_unitario DECIMAL(10,2),
+    INDEX idx_tipo (tipo),
+    INDEX idx_disponible (disponible)
+) ENGINE=InnoDB;
+
+-- ============================================================================
+-- TABLA: CATEGORIA_PRODUCTO
+-- Categorías para clasificar los productos
+-- ============================================================================
+CREATE TABLE categoria_producto (
+    id_categoria INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL UNIQUE,
+    descripcion TEXT,
+    orden_visualizacion INT DEFAULT 0,
+    activa BOOLEAN DEFAULT TRUE
+) ENGINE=InnoDB;
+
+-- ============================================================================
+-- TABLA: PRODUCTO
+-- Productos disponibles en la pizzería (pizzas, panzarottis, bebidas, postres)
+-- ============================================================================
+CREATE TABLE producto (
+    id_producto INT AUTO_INCREMENT PRIMARY KEY,
+    id_categoria INT NOT NULL,
+    nombre VARCHAR(150) NOT NULL,
+    descripcion TEXT,
+    precio_base DECIMAL(10,2) NOT NULL CHECK (precio_base >= 0),
+    tamano ENUM('pequeña', 'mediana', 'grande', 'familiar', 'unica') DEFAULT 'unica',
+    es_elaborado BOOLEAN DEFAULT FALSE,
+    disponible BOOLEAN DEFAULT TRUE,
+    imagen_url VARCHAR(255),
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_categoria) REFERENCES categoria_producto(id_categoria) ON DELETE RESTRICT,
+    INDEX idx_categoria (id_categoria),
+    INDEX idx_disponible (disponible),
+    INDEX idx_es_elaborado (es_elaborado)
+) ENGINE=InnoDB;
+
+-- ============================================================================
+-- TABLA: PRODUCTO_INGREDIENTE (Relación N:M)
+-- Relaciona productos elaborados con sus ingredientes
+-- ============================================================================
+CREATE TABLE producto_ingrediente (
+    id_producto INT NOT NULL,
+    id_ingrediente INT NOT NULL,
+    cantidad DECIMAL(10,2) DEFAULT 1.0,
+    es_opcional BOOLEAN DEFAULT FALSE,
+    PRIMARY KEY (id_producto, id_ingrediente),
+    FOREIGN KEY (id_producto) REFERENCES producto(id_producto) ON DELETE CASCADE,
+    FOREIGN KEY (id_ingrediente) REFERENCES ingrediente(id_ingrediente) ON DELETE RESTRICT
+) ENGINE=InnoDB;
+
+-- ============================================================================
+-- TABLA: ADICION
+-- Extras que se pueden agregar a los productos
+-- ============================================================================
+CREATE TABLE adicion (
+    id_adicion INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL UNIQUE,
+    descripcion TEXT,
+    precio_adicional DECIMAL(10,2) NOT NULL CHECK (precio_adicional >= 0),
+    disponible BOOLEAN DEFAULT TRUE,
+    tipo ENUM('ingrediente', 'salsa', 'bebida', 'otro') DEFAULT 'ingrediente',
+    INDEX idx_disponible (disponible)
+) ENGINE=InnoDB;
+
+-- ============================================================================
+-- TABLA: COMBO
+-- Combos especiales con múltiples productos
+-- ============================================================================
+CREATE TABLE combo (
+    id_combo INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(150) NOT NULL,
+    descripcion TEXT,
+    precio_combo DECIMAL(10,2) NOT NULL CHECK (precio_combo >= 0),
+    descuento_porcentaje DECIMAL(5,2) DEFAULT 0.00 CHECK (descuento_porcentaje BETWEEN 0 AND 100),
+    fecha_inicio_vigencia DATE,
+    fecha_fin_vigencia DATE,
+    activo BOOLEAN DEFAULT TRUE,
+    imagen_url VARCHAR(255),
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_activo (activo),
+    INDEX idx_vigencia (fecha_inicio_vigencia, fecha_fin_vigencia),
+    CHECK (fecha_fin_vigencia IS NULL OR fecha_fin_vigencia >= fecha_inicio_vigencia)
+) ENGINE=InnoDB;
+
+-- ============================================================================
+-- TABLA: COMBO_PRODUCTO (Relación N:M)
+-- Productos que componen cada combo
+-- ============================================================================
+CREATE TABLE combo_producto (
+    id_combo INT NOT NULL,
+    id_producto INT NOT NULL,
+    cantidad INT NOT NULL DEFAULT 1 CHECK (cantidad > 0),
+    precio_unitario_combo DECIMAL(10,2),
+    PRIMARY KEY (id_combo, id_producto),
+    FOREIGN KEY (id_combo) REFERENCES combo(id_combo) ON DELETE CASCADE,
+    FOREIGN KEY (id_producto) REFERENCES producto(id_producto) ON DELETE RESTRICT
+) ENGINE=InnoDB;
+
+-- ============================================================================
+-- TABLA: MENU
+-- Menús disponibles en diferentes períodos
+-- ============================================================================
+CREATE TABLE menu (
+    id_menu INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(150) NOT NULL,
+    descripcion TEXT,
+    fecha_inicio DATE NOT NULL,
+    fecha_fin DATE,
+    activo BOOLEAN DEFAULT TRUE,
+    tipo_menu ENUM('diario', 'semanal', 'especial', 'promocion') DEFAULT 'diario',
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_activo (activo),
+    INDEX idx_fechas (fecha_inicio, fecha_fin),
+    CHECK (fecha_fin IS NULL OR fecha_fin >= fecha_inicio)
+) ENGINE=InnoDB;
+
+-- ============================================================================
+-- TABLA: MENU_ITEM
+-- Items del menú (productos o combos)
+-- ============================================================================
+CREATE TABLE menu_item (
+    id_menu_item INT AUTO_INCREMENT PRIMARY KEY,
+    id_menu INT NOT NULL,
+    id_producto INT,
+    id_combo INT,
+    orden_visualizacion INT DEFAULT 0,
+    destacado BOOLEAN DEFAULT FALSE,
+    FOREIGN KEY (id_menu) REFERENCES menu(id_menu) ON DELETE CASCADE,
+    FOREIGN KEY (id_producto) REFERENCES producto(id_producto) ON DELETE CASCADE,
+    FOREIGN KEY (id_combo) REFERENCES combo(id_combo) ON DELETE CASCADE,
+    INDEX idx_menu (id_menu),
+    INDEX idx_producto (id_producto),
+    INDEX idx_combo (id_combo),
+    INDEX idx_destacado (destacado),
+    -- Restricción: debe tener producto O combo, no ambos ni ninguno
+    CHECK (
+        (id_producto IS NOT NULL AND id_combo IS NULL) OR 
+        (id_producto IS NULL AND id_combo IS NOT NULL)
+    )
+) ENGINE=InnoDB;
+
+-- ============================================================================
+-- TABLA: PEDIDO
+-- Pedidos realizados por los clientes
+-- ============================================================================
+CREATE TABLE pedido (
+    id_pedido INT AUTO_INCREMENT PRIMARY KEY,
+    id_cliente INT NOT NULL,
+    fecha_hora TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    tipo_pedido ENUM('para_consumir', 'para_recoger') NOT NULL,
+    estado ENUM('pendiente', 'en_preparacion', 'listo', 'entregado', 'cancelado') DEFAULT 'pendiente',
+    subtotal DECIMAL(10,2) NOT NULL DEFAULT 0.00 CHECK (subtotal >= 0),
+    total_adiciones DECIMAL(10,2) DEFAULT 0.00 CHECK (total_adiciones >= 0),
+    total_final DECIMAL(10,2) NOT NULL DEFAULT 0.00 CHECK (total_final >= 0),
+    observaciones TEXT,
+    numero_mesa INT,
+    hora_recogida TIME,
+    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente) ON DELETE RESTRICT,
+    INDEX idx_cliente (id_cliente),
+    INDEX idx_fecha (fecha_hora),
+    INDEX idx_estado (estado),
+    INDEX idx_tipo (tipo_pedido)
+) ENGINE=InnoDB;
+
+-- ============================================================================
+-- TABLA: DETALLE_PEDIDO
+-- Líneas de detalle de cada pedido (productos o combos)
+-- ============================================================================
+CREATE TABLE detalle_pedido (
+    id_detalle INT AUTO_INCREMENT PRIMARY KEY,
+    id_pedido INT NOT NULL,
+    id_producto INT,
+    id_combo INT,
+    cantidad INT NOT NULL DEFAULT 1 CHECK (cantidad > 0),
+    precio_unitario DECIMAL(10,2) NOT NULL CHECK (precio_unitario >= 0),
+    subtotal_detalle DECIMAL(10,2) NOT NULL CHECK (subtotal_detalle >= 0),
+    observaciones_detalle TEXT,
+    FOREIGN KEY (id_pedido) REFERENCES pedido(id_pedido) ON DELETE CASCADE,
+    FOREIGN KEY (id_producto) REFERENCES producto(id_producto) ON DELETE RESTRICT,
+    FOREIGN KEY (id_combo) REFERENCES combo(id_combo) ON DELETE RESTRICT,
+    INDEX idx_pedido (id_pedido),
+    INDEX idx_producto (id_producto),
+    INDEX idx_combo (id_combo),
+    -- Restricción: debe tener producto O combo, no ambos ni ninguno
+    CHECK (
+        (id_producto IS NOT NULL AND id_combo IS NULL) OR 
+        (id_producto IS NULL AND id_combo IS NOT NULL)
+    )
+) ENGINE=InnoDB;
+
+-- ============================================================================
+-- TABLA: DETALLE_ADICION
+-- Adiciones aplicadas a los detalles de pedido
+-- ============================================================================
+CREATE TABLE detalle_adicion (
+    id_detalle_adicion INT AUTO_INCREMENT PRIMARY KEY,
+    id_detalle INT NOT NULL,
+    id_adicion INT NOT NULL,
+    cantidad INT NOT NULL DEFAULT 1 CHECK (cantidad > 0),
+    precio_adicion DECIMAL(10,2) NOT NULL CHECK (precio_adicion >= 0),
+    subtotal_adicion DECIMAL(10,2) GENERATED ALWAYS AS (cantidad * precio_adicion) STORED,
+    FOREIGN KEY (id_detalle) REFERENCES detalle_pedido(id_detalle) ON DELETE CASCADE,
+    FOREIGN KEY (id_adicion) REFERENCES adicion(id_adicion) ON DELETE RESTRICT,
+    INDEX idx_detalle (id_detalle),
+    INDEX idx_adicion (id_adicion)
+) ENGINE=InnoDB;
+
+-- ============================================================================
+-- TRIGGERS PARA MANTENER INTEGRIDAD Y CÁLCULOS AUTOMÁTICOS
+-- ============================================================================
+
+-- Trigger: Actualizar subtotal_detalle al insertar detalle_pedido
+DELIMITER //
+CREATE TRIGGER trg_detalle_pedido_subtotal_insert
+BEFORE INSERT ON detalle_pedido
+FOR EACH ROW
+BEGIN
+    SET NEW.subtotal_detalle = NEW.cantidad * NEW.precio_unitario;
+END//
+
+-- Trigger: Actualizar subtotal_detalle al modificar detalle_pedido
+CREATE TRIGGER trg_detalle_pedido_subtotal_update
+BEFORE UPDATE ON detalle_pedido
+FOR EACH ROW
+BEGIN
+    SET NEW.subtotal_detalle = NEW.cantidad * NEW.precio_unitario;
+END//
+
+-- Trigger: Actualizar totales del pedido al insertar detalle
+CREATE TRIGGER trg_actualizar_pedido_insert_detalle
+AFTER INSERT ON detalle_pedido
+FOR EACH ROW
+BEGIN
+    UPDATE pedido 
+    SET subtotal = (
+        SELECT COALESCE(SUM(subtotal_detalle), 0) 
+        FROM detalle_pedido 
+        WHERE id_pedido = NEW.id_pedido
+    ),
+    total_adiciones = (
+        SELECT COALESCE(SUM(da.subtotal_adicion), 0)
+        FROM detalle_adicion da
+        INNER JOIN detalle_pedido dp ON da.id_detalle = dp.id_detalle
+        WHERE dp.id_pedido = NEW.id_pedido
+    )
+    WHERE id_pedido = NEW.id_pedido;
+    
+    UPDATE pedido
+    SET total_final = subtotal + total_adiciones
+    WHERE id_pedido = NEW.id_pedido;
+END//
+
+-- Trigger: Actualizar totales del pedido al modificar detalle
+CREATE TRIGGER trg_actualizar_pedido_update_detalle
+AFTER UPDATE ON detalle_pedido
+FOR EACH ROW
+BEGIN
+    UPDATE pedido 
+    SET subtotal = (
+        SELECT COALESCE(SUM(subtotal_detalle), 0) 
+        FROM detalle_pedido 
+        WHERE id_pedido = NEW.id_pedido
+    )
+    WHERE id_pedido = NEW.id_pedido;
+    
+    UPDATE pedido
+    SET total_final = subtotal + total_adiciones
+    WHERE id_pedido = NEW.id_pedido;
+END//
+
+-- Trigger: Actualizar totales del pedido al eliminar detalle
+CREATE TRIGGER trg_actualizar_pedido_delete_detalle
+AFTER DELETE ON detalle_pedido
+FOR EACH ROW
+BEGIN
+    UPDATE pedido 
+    SET subtotal = (
+        SELECT COALESCE(SUM(subtotal_detalle), 0) 
+        FROM detalle_pedido 
+        WHERE id_pedido = OLD.id_pedido
+    ),
+    total_adiciones = (
+        SELECT COALESCE(SUM(da.subtotal_adicion), 0)
+        FROM detalle_adicion da
+        INNER JOIN detalle_pedido dp ON da.id_detalle = dp.id_detalle
+        WHERE dp.id_pedido = OLD.id_pedido
+    )
+    WHERE id_pedido = OLD.id_pedido;
+    
+    UPDATE pedido
+    SET total_final = subtotal + total_adiciones
+    WHERE id_pedido = OLD.id_pedido;
+END//
+
+-- Trigger: Actualizar totales del pedido al insertar adición
+CREATE TRIGGER trg_actualizar_pedido_insert_adicion
+AFTER INSERT ON detalle_adicion
+FOR EACH ROW
+BEGIN
+    DECLARE v_id_pedido INT;
+    
+    SELECT id_pedido INTO v_id_pedido
+    FROM detalle_pedido
+    WHERE id_detalle = NEW.id_detalle;
+    
+    UPDATE pedido 
+    SET total_adiciones = (
+        SELECT COALESCE(SUM(da.subtotal_adicion), 0)
+        FROM detalle_adicion da
+        INNER JOIN detalle_pedido dp ON da.id_detalle = dp.id_detalle
+        WHERE dp.id_pedido = v_id_pedido
+    )
+    WHERE id_pedido = v_id_pedido;
+    
+    UPDATE pedido
+    SET total_final = subtotal + total_adiciones
+    WHERE id_pedido = v_id_pedido;
+END//
+
+-- Trigger: Actualizar totales del pedido al eliminar adición
+CREATE TRIGGER trg_actualizar_pedido_delete_adicion
+AFTER DELETE ON detalle_adicion
+FOR EACH ROW
+BEGIN
+    DECLARE v_id_pedido INT;
+    
+    SELECT id_pedido INTO v_id_pedido
+    FROM detalle_pedido
+    WHERE id_detalle = OLD.id_detalle;
+    
+    UPDATE pedido 
+    SET total_adiciones = (
+        SELECT COALESCE(SUM(da.subtotal_adicion), 0)
+        FROM detalle_adicion da
+        INNER JOIN detalle_pedido dp ON da.id_detalle = dp.id_detalle
+        WHERE dp.id_pedido = v_id_pedido
+    )
+    WHERE id_pedido = v_id_pedido;
+    
+    UPDATE pedido
+    SET total_final = subtotal + total_adiciones
+    WHERE id_pedido = v_id_pedido;
+END//
+
+DELIMITER ;
+
+-- ============================================================================
+-- VISTAS ÚTILES PARA CONSULTAS FRECUENTES
+-- ============================================================================
+
+-- Vista: Productos con sus ingredientes
+CREATE VIEW vista_productos_ingredientes AS
+SELECT 
+    p.id_producto,
+    p.nombre AS producto_nombre,
+    p.tamano,
+    p.precio_base,
+    c.nombre AS categoria,
+    i.nombre AS ingrediente,
+    i.tipo AS tipo_ingrediente,
+    pi.cantidad
+FROM producto p
+INNER JOIN categoria_producto c ON p.id_categoria = c.id_categoria
+LEFT JOIN producto_ingrediente pi ON p.id_producto = pi.id_producto
+LEFT JOIN ingrediente i ON pi.id_ingrediente = i.id_ingrediente
+WHERE p.disponible = TRUE;
+
+-- Vista: Combos con sus productos
+CREATE VIEW vista_combos_detalle AS
+SELECT 
+    c.id_combo,
+    c.nombre AS combo_nombre,
+    c.precio_combo,
+    c.descuento_porcentaje,
+    p.nombre AS producto_nombre,
+    cp.cantidad,
+    p.precio_base
+FROM combo c
+INNER JOIN combo_producto cp ON c.id_combo = cp.id_combo
+INNER JOIN producto p ON cp.id_producto = p.id_producto
+WHERE c.activo = TRUE;
+
+-- Vista: Pedidos completos con detalles
+CREATE VIEW vista_pedidos_completos AS
+SELECT 
+    ped.id_pedido,
+    ped.fecha_hora,
+    ped.tipo_pedido,
+    ped.estado,
+    cli.nombre AS cliente_nombre,
+    cli.apellido AS cliente_apellido,
+    cli.telefono,
+    COALESCE(prod.nombre, comb.nombre) AS item_nombre,
+    det.cantidad,
+    det.precio_unitario,
+    det.subtotal_detalle,
+    ped.total_final
+FROM pedido ped
+INNER JOIN cliente cli ON ped.id_cliente = cli.id_cliente
+INNER JOIN detalle_pedido det ON ped.id_pedido = det.id_pedido
+LEFT JOIN producto prod ON det.id_producto = prod.id_producto
+LEFT JOIN combo comb ON det.id_combo = comb.id_combo;
+
+-- ============================================================================
+-- DATOS DE EJEMPLO PARA PRUEBAS
+-- ============================================================================
+
+-- Insertar categorías
+INSERT INTO categoria_producto (nombre, descripcion, orden_visualizacion) VALUES
+('Pizza', 'Pizzas artesanales con masa fresca', 1),
+('Panzarotti', 'Panzarottis rellenos y horneados', 2),
+('Bebida', 'Bebidas frías y calientes', 3),
+('Postre', 'Postres caseros', 4),
+('Entrada', 'Entradas y aperitivos', 5);
+
+-- Insertar ingredientes
+INSERT INTO ingrediente (nombre, tipo, disponible, costo_unitario) VALUES
+('Masa tradicional', 'base', TRUE, 2.50),
+('Salsa de tomate', 'salsa', TRUE, 1.00),
+('Queso mozzarella', 'queso', TRUE, 3.50),
+('Pepperoni', 'proteina', TRUE, 4.00),
+('Jamón', 'proteina', TRUE, 3.00),
+('Champiñones', 'vegetal', TRUE, 2.00),
+('Cebolla', 'vegetal', TRUE, 0.50),
+('Pimentón', 'vegetal', TRUE, 1.00),
+('Aceitunas', 'vegetal', TRUE, 2.50),
+('Piña', 'vegetal', TRUE, 1.50);
+
+-- Insertar productos
+INSERT INTO producto (id_categoria, nombre, descripcion, precio_base, tamano, es_elaborado, disponible) VALUES
+(1, 'Pizza Margarita', 'Pizza clásica con tomate, mozzarella y albahaca', 25000, 'mediana', TRUE, TRUE),
+(1, 'Pizza Pepperoni', 'Pizza con abundante pepperoni y queso', 28000, 'mediana', TRUE, TRUE),
+(1, 'Pizza Hawaiana', 'Pizza con jamón y piña', 27000, 'mediana', TRUE, TRUE),
+(2, 'Panzarotti de Pollo', 'Panzarotti relleno de pollo y queso', 18000, 'unica', TRUE, TRUE),
+(2, 'Panzarotti Mixto', 'Panzarotti con carnes mixtas', 20000, 'unica', TRUE, TRUE),
+(3, 'Coca Cola 400ml', 'Bebida gaseosa', 3500, 'unica', FALSE, TRUE),
+(3, 'Jugo Natural', 'Jugo de frutas naturales', 5000, 'unica', FALSE, TRUE),
+(4, 'Brownie', 'Brownie de chocolate casero', 6000, 'unica', FALSE, TRUE),
+(4, 'Helado', 'Helado artesanal', 7000, 'unica', FALSE, TRUE);
+
+-- Insertar relación producto-ingrediente (solo para productos elaborados)
+INSERT INTO producto_ingrediente (id_producto, id_ingrediente, cantidad) VALUES
+-- Pizza Margarita
+(1, 1, 1), (1, 2, 1), (1, 3, 1),
+-- Pizza Pepperoni
+(2, 1, 1), (2, 2, 1), (2, 3, 1), (2, 4, 2),
+-- Pizza Hawaiana
+(3, 1, 1), (3, 2, 1), (3, 3, 1), (3, 5, 1), (3, 10, 1),
+-- Panzarotti de Pollo
+(4, 1, 0.5), (4, 3, 1),
+-- Panzarotti Mixto
+(5, 1, 0.5), (5, 3, 1), (5, 4, 0.5), (5, 5, 0.5);
+
+-- Insertar adiciones
+INSERT INTO adicion (nombre, descripcion, precio_adicional, tipo) VALUES
+('Extra queso', 'Porción adicional de queso mozzarella', 3000, 'ingrediente'),
+('Extra pepperoni', 'Porción adicional de pepperoni', 4000, 'ingrediente'),
+('Salsa BBQ', 'Salsa barbecue adicional', 1500, 'salsa'),
+('Salsa de ajo', 'Salsa de ajo casera', 1500, 'salsa'),
+('Borde de queso', 'Borde relleno de queso', 5000, 'ingrediente');
+
+-- Insertar clientes
+INSERT INTO cliente (nombre, apellido, telefono, email, direccion) VALUES
+('Juan', 'Pérez', '3001234567', 'juan.perez@email.com', 'Calle 10 #20-30'),
+('María', 'González', '3109876543', 'maria.gonzalez@email.com', 'Carrera 15 #25-40'),
+('Carlos', 'Rodríguez', '3201122334', 'carlos.rodriguez@email.com', 'Avenida 5 #12-18');
+
+-- Insertar combos
+INSERT INTO combo (nombre, descripcion, precio_combo, descuento_porcentaje, activo) VALUES
+('Combo Familiar', '2 Pizzas medianas + 2 Bebidas + 1 Postre', 65000, 15, TRUE),
+('Combo Pareja', '1 Pizza mediana + 2 Bebidas', 32000, 10, TRUE),
+('Combo Personal', '1 Panzarotti + 1 Bebida', 20000, 5, TRUE);
+
+-- Insertar productos en combos
+INSERT INTO combo_producto (id_combo, id_producto, cantidad) VALUES
+-- Combo Familiar
+(1, 2, 2), (1, 6, 2), (1, 8, 1),
+-- Combo Pareja
+(2, 1, 1), (2, 6, 2),
+-- Combo Personal
+(3, 4, 1), (3, 7, 1);
+
+-- Insertar menú
+INSERT INTO menu (nombre, descripcion, fecha_inicio, activo, tipo_menu) VALUES
+('Menú Principal', 'Menú completo disponible todos los días', '2024-01-01', TRUE, 'diario');
+
+-- Insertar items en el menú
+INSERT INTO menu_item (id_menu, id_producto, id_combo, orden_visualizacion, destacado) VALUES
+(1, 1, NULL, 1, TRUE),
+(1, 2, NULL, 2, TRUE),
+(1, 3, NULL, 3, FALSE),
+(1, 4, NULL, 4, FALSE),
+(1, 5, NULL, 5, FALSE),
+(1, NULL, 1, 6, TRUE),
+(1, NULL, 2, 7, FALSE);
+
