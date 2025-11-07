@@ -534,3 +534,73 @@ INSERT INTO menu_item (id_menu, id_producto, id_combo, orden_visualizacion, dest
 (1, NULL, 1, 6, TRUE),
 (1, NULL, 2, 7, FALSE);
 
+-- ============================================================================
+-- INSERTAR PEDIDOS Y DETALLES (DATOS FALTANTES)
+-- ============================================================================
+
+-- Pedido 1: Juan Pérez - Para consumir
+INSERT INTO pedido (id_cliente, tipo_pedido, numero_mesa, estado, fecha_hora) 
+VALUES (1, 'para_consumir', 5, 'entregado', '2024-11-01 12:30:00');
+
+INSERT INTO detalle_pedido (id_pedido, id_producto, cantidad, precio_unitario) 
+VALUES (1, 2, 2, 28000);
+
+INSERT INTO detalle_adicion (id_detalle, id_adicion, cantidad, precio_adicion) 
+VALUES (1, 1, 1, 3000);
+
+-- Pedido 2: María González - Para recoger
+INSERT INTO pedido (id_cliente, tipo_pedido, hora_recogida, estado, fecha_hora) 
+VALUES (2, 'para_recoger', '18:00:00', 'entregado', '2024-11-02 17:15:00');
+
+INSERT INTO detalle_pedido (id_pedido, id_producto, cantidad, precio_unitario) 
+VALUES (2, 1, 1, 25000);
+
+INSERT INTO detalle_pedido (id_pedido, id_producto, cantidad, precio_unitario) 
+VALUES (2, 6, 2, 3500);
+
+-- Pedido 3: Carlos Rodríguez - Combo
+INSERT INTO pedido (id_cliente, tipo_pedido, numero_mesa, estado, fecha_hora) 
+VALUES (3, 'para_consumir', 8, 'entregado', '2024-11-03 19:45:00');
+
+INSERT INTO detalle_pedido (id_pedido, id_combo, cantidad, precio_unitario) 
+VALUES (3, 1, 1, 65000);
+
+-- Pedido 4: Juan Pérez - Para recoger
+INSERT INTO pedido (id_cliente, tipo_pedido, hora_recogida, estado, fecha_hora) 
+VALUES (1, 'para_recoger', '20:30:00', 'entregado', '2024-11-04 20:00:00');
+
+INSERT INTO detalle_pedido (id_pedido, id_producto, cantidad, precio_unitario) 
+VALUES (4, 3, 1, 27000);
+
+INSERT INTO detalle_pedido (id_pedido, id_producto, cantidad, precio_unitario) 
+VALUES (4, 8, 1, 6000);
+
+INSERT INTO detalle_adicion (id_detalle, id_adicion, cantidad, precio_adicion) 
+VALUES (4, 5, 1, 5000);
+
+-- Pedido 5: María González - Panzarotti con extra queso
+INSERT INTO pedido (id_cliente, tipo_pedido, numero_mesa, estado, fecha_hora) 
+VALUES (2, 'para_consumir', 3, 'entregado', '2024-11-05 13:20:00');
+
+INSERT INTO detalle_pedido (id_pedido, id_producto, cantidad, precio_unitario) 
+VALUES (5, 4, 2, 18000);
+
+INSERT INTO detalle_adicion (id_detalle, id_adicion, cantidad, precio_adicion) 
+VALUES (5, 1, 2, 3000);
+
+-- Pedido 6: Carlos Rodríguez - Para recoger
+INSERT INTO pedido (id_cliente, tipo_pedido, hora_recogida, estado, fecha_hora) 
+VALUES (3, 'para_recoger', '14:00:00', 'entregado', '2024-11-06 13:30:00');
+
+INSERT INTO detalle_pedido (id_pedido, id_producto, cantidad, precio_unitario) 
+VALUES (6, 2, 1, 28000);
+
+INSERT INTO detalle_pedido (id_pedido, id_producto, cantidad, precio_unitario) 
+VALUES (6, 6, 1, 3500);
+
+INSERT INTO detalle_pedido (id_pedido, id_producto, cantidad, precio_unitario) 
+VALUES (6, 7, 1, 5000);
+
+INSERT INTO detalle_pedido (id_pedido, id_producto, cantidad, precio_unitario) 
+VALUES (6, 9, 1, 7000);
+

@@ -3,73 +3,51 @@
 
 ## 📋 Descripción del Proyecto
 
-Este proyecto consiste en el diseño e implementación de una **base de datos relacional en MySQL** para una pizzería.
-El sistema permite gestionar de manera eficiente los **productos, combos, pedidos, clientes y adiciones**, centralizando toda la información en una única plataforma.
-El propósito principal es facilitar el control del menú, la gestión de ventas y la personalización de pedidos, permitiendo generar reportes que apoyen la toma de decisiones.
+Proyecto académico enfocado en el diseño e implementación de una base de datos relacional para una pizzería utilizando MySQL. La solución centraliza la información de productos, ingredientes, combos, pedidos, clientes y adiciones, incorporando vistas y disparadores que facilitan la operación diaria y el análisis de datos.
 
----
+## 🎯 Objetivo
 
-## 🎯 Objetivo 
-
-Desarrollar una base de datos que permita:
-
-* Registrar y administrar todos los productos del menú (pizzas, panzarottis, bebidas, postres, etc.).
-* Gestionar adiciones personalizadas para los clientes.
-* Controlar la venta de **combos especiales**.
-* Registrar y analizar los **pedidos**, ya sean para **consumir en el lugar** o **recoger**.
-* Facilitar consultas analíticas sobre ventas, productos más vendidos e ingresos generados.
-
----
+- Centralizar el catálogo completo de productos y combos.
+- Facilitar la personalización de pedidos mediante adiciones.
+- Llevar el control de pedidos para consumir en el local o recoger.
+- Automatizar cálculos de subtotales y totales.
+- Generar reportes que ayuden a entender ventas, ingresos y preferencias de clientes.
 
 ## 🌟 Características Destacadas
 
-
-* **Gestión de Productos:** Control completo de productos elaborados y no elaborados, incluyendo sus ingredientes.
-* **Gestión de Adiciones:** Posibilidad de agregar extras a los productos (como queso, salsas, etc.).
-* **Gestión de Combos:** Administración de combos con varios productos a precio promocional.
-* **Gestión de Pedidos:** Registro detallado de cada pedido, tipo, fecha, cliente y monto total.
-* **Consultas Analíticas:** Permite obtener reportes sobre ventas, ingresos, preferencias de clientes y productos más vendidos.
-
----
+- Modelo en tercera forma normal con integridad referencial.
+- Vistas como `vista_productos_ingredientes`, `vista_combos_detalle` y `vista_pedidos_completos`.
+- Disparadores que recalculan montos al insertar, actualizar o eliminar pedidos y adiciones.
+- Datos de ejemplo para probar el comportamiento del sistema.
+- Consultas analíticas que cubren ventas por categoría, combos, adiciones, hábitos de clientes y tendencias diarias.
 
 ## 🧰 Tecnologías Utilizadas
 
-* **Base de Datos:** MySQL 8.0
-* **Lenguaje de Consultas:** SQL
-* **Herramientas de Diseño:** MySQL Workbench / DrawSQL / StarUML
-* **Control de Versiones:** Git y GitHub
+- MySQL 8.0 (motor InnoDB, vistas y triggers).
+- SQL para definición y consulta de datos.
+- Herramientas de modelado recomendadas: MySQL Workbench, DrawSQL o StarUML.
+- Control de versiones con Git y GitHub.
 
----
+## 🗂️ Estructura del Sistema
 
-
-## 🗂️ Estructura del Sistema 
-
-
-El sistema está compuesto por las siguientes entidades principales:
-
-* **Producto:** Registra información de pizzas, panzarottis, bebidas y postres.
-* **Ingrediente:** Almacena los ingredientes de los productos elaborados.
-* **Adición:** Contiene las opciones adicionales que puede elegir el cliente.
-* **Combo:** Agrupa varios productos con un precio especial.
-* **Cliente:** Guarda la información básica de los clientes.
-* **Pedido:** Registra cada pedido realizado, incluyendo fecha, tipo y total.
-* **Pedido_Producto / Pedido_Combo / Pedido_Adición:** Enlazan los pedidos con los productos, combos y adiciones correspondientes.
-
----
-
+- **Cliente**: datos de contacto y estado.
+- **Producto** y **Categoria_producto**: catálogo clasificado, incluidas bebidas y postres.
+- **Ingrediente** y **Producto_ingrediente**: recetas detalladas para productos elaborados.
+- **Adicion** y **Detalle_adicion**: extras personalizables asociados a cada pedido.
+- **Combo** y **Combo_producto**: promociones con vigencia, descuentos y composición.
+- **Menu** y **Menu_item**: planificación de menús por periodos.
+- **Pedido** y **Detalle_pedido**: registro completo de pedidos con cálculos automáticos.
 
 ## 📦 Qué Hace Cada Archivo
 
-| Archivo            | Descripción                                                                                                           |
-| ------------------ | --------------------------------------------------------------------------------------------------------------------- |
-| **estructura.sql** | Contiene la estructura completa de la base de datos: creación de tablas, claves primarias, foráneas y restricciones.  |
-| **datos.sql**      | Incluye los datos de prueba (clientes, productos, combos, pedidos, adiciones, etc.) para validar el sistema.          |
-| **README.md**      | Documento de guía del proyecto: explica la finalidad, características, estructura, archivos y tecnologías utilizadas. |
-
----
-
+| Archivo | Descripción |
+| --- | --- |
+| `codigo sql` | Script maestro que crea la base `pizzeria_db`, define tablas, restricciones, disparadores y carga datos de ejemplo. |
+| `codigo _consulta.sql` | Colección de 20 consultas analíticas para explorar ventas, combos, adiciones y clientes. |
+| `ERDDiagram1.jpg` | Diagrama entidad-relación del modelo. |
+| `readme.md` | Documento de referencia del proyecto. |
 
 ## 👨‍💻 Autor
 
-**valentina mancilla **
+**Valentina Mancilla**.
 
